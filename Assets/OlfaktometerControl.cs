@@ -5,10 +5,9 @@ using UnityEngine;
 
 public class OlfaktometerControl : MonoBehaviour {
     private string cmdStart="63";
-    private int ventilDecimal;
-    private string ventilInputToString;
     private Vector3 triggerPosition;
     private float triggerRadius;
+    private float elapsed = 0f;
 
     [Tooltip("Werte von 0-255 \nReguliert die Intensität des Geruches")]
     public string Massendurchflussregler1 = "0";
@@ -20,23 +19,15 @@ public class OlfaktometerControl : MonoBehaviour {
 
     private void OnTriggerEnter(Collider col)
     {
-        ventilInputToString = convertVentileInput().ToString();
-        if (ventilInputToString.Length == 1)
-        {
-            ventilInputToString = "00"+ ventilInputToString;
-        }
-        if (ventilInputToString.Length == 2)
-        {
-            ventilInputToString = "0"+ventilInputToString ;
-        }
+        
 
 
         triggerPosition = GameObject.Find("Trigger").transform.position;
         triggerRadius = Vector3.Distance(triggerPosition, col.transform.position);
        
-        string cmdVentil = cmdStart + ventilInputToString + Massendurchflussregler1 + Massendurchflussregler2;
+        string cmdVentil = cmdStart + convertVentileInputToString() + Massendurchflussregler1 + Massendurchflussregler2;
         
-        //Debug.Log(cmdVentil);
+        Debug.Log(cmdVentil);
         Serial.Write(cmdVentil);
        
         
@@ -46,9 +37,13 @@ public class OlfaktometerControl : MonoBehaviour {
     {
         if (distanceOdorStrength == true)
         {
-            strengthDistanceRatio(getColliderPos(col));
-            Serial.Write(cmdStart + ventilInputToString + Massendurchflussregler1 + Massendurchflussregler2);
-            Debug.Log(cmdStart + ventilInputToString + Massendurchflussregler1 + Massendurchflussregler2);
+            elapsed += Time.deltaTime;
+            if (elapsed >= 1f)
+            {
+                elapsed = elapsed % 1f;
+                SmellStrenghtUpdate(col);
+            }
+           
 
 
         }
@@ -69,13 +64,21 @@ public class OlfaktometerControl : MonoBehaviour {
 
     }
     
-    private int convertVentileInput()
+    private string convertVentileInputToString()
     {
         BitArray arr = new BitArray(Ventile);
         byte[] data = new byte[1];
         arr.CopyTo(data, 0);
-       
-        return data[0];
+        string ventilInputToString = data[0].ToString();
+        if (ventilInputToString.Length == 1)
+        {
+            ventilInputToString = "00" + ventilInputToString;
+        }
+        if (ventilInputToString.Length == 2)
+        {
+            ventilInputToString = "0" + ventilInputToString;
+        }
+        return ventilInputToString;
         
         
       
@@ -128,6 +131,13 @@ public class OlfaktometerControl : MonoBehaviour {
         }
 
     }
+    
    
+    void SmellStrenghtUpdate(Collider col)
+    {
+        strengthDistanceRatio(getColliderPos(col));
+        Serial.Write(cmdStart + convertVentileInputToString() + Massendurchflussregler1 + Massendurchflussregler2);
+        Debug.Log(cmdStart + convertVentileInputToString() + Massendurchflussregler1 + Massendurchflussregler2);
+    }
 
 }
