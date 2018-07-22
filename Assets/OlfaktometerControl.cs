@@ -13,15 +13,13 @@ public class OlfaktometerControl : MonoBehaviour {
     public string Massendurchflussregler1 = "0";
     public string Massendurchflussregler2 = "0";
     public bool distanceOdorStrength = false;
-    [Tooltip("Auswahl welches Ventil angesteuert werden soll")]
+    [HideInInspector]
     public bool[] Ventile=new bool[8];
    
 
     private void OnTriggerEnter(Collider col)
     {
         
-
-
         triggerPosition = GameObject.Find("Trigger").transform.position;
         triggerRadius = Vector3.Distance(triggerPosition, col.transform.position);
        
